@@ -18,7 +18,24 @@ router.post("/", validateUser, (req, res) => {
     });
 });
 
-router.post("/:id/posts", validateUserId, (req, res) => {});
+router.post("/:id/posts", validateUserId, validatePost, (req, res) => {
+  const newPost = req.body;
+
+  db.insert(newPost)
+    .then(post => {
+      if (post) {
+        res.status(201).json(post);
+      } else {
+        res.status(404).json({ message: "404 id invalid" });
+      }
+    })
+    .catch(error => {
+      res.status(500).json({
+        error: error,
+        message: "THERE WAS AN ERROR CREATING A USER POST"
+      });
+    });
+});
 
 router.get("/", (req, res) => {
   db.get()
@@ -34,19 +51,73 @@ router.get("/", (req, res) => {
 });
 
 router.get("/:id", validateUserId, (req, res) => {
-  res.send("validation ID is working");
+  const id = req.params.id;
+
+  db.getById(id)
+    .then(user => {
+      res.status(200).json(user);
+    })
+    .catch(error => {
+      res.status(500).json({
+        error: error,
+        message: "THERE WAS AN ERROR GETTING USER ID"
+      });
+    });
 });
 
-router.get("/:id/posts", validateUserId, (req, res) => {});
+router.get("/:id/posts", validateUserId, (req, res) => {
+  const id = req.params.id;
 
-router.delete("/:id", validateUserId, (req, res) => {});
+  db.getUserPosts(id)
+    .then(post => {
+      res.status(200).json(post);
+    })
+    .catch(error => {
+      res.status(500).json({
+        error: error,
+        message: "THERE WAS AN ERROR GETTING USER id's post"
+      });
+    });
+});
 
-router.put("/:id", validateUserId, (req, res) => {});
+router.delete("/:id", validateUserId, (req, res) => {
+  const id = req.params.id;
+
+  db.remove(id)
+    .then(deleted => {
+      res.status(204).json(deleted);
+      console.log("deleted user id");
+    })
+    .catch(error => {
+      res.status(500).json({
+        error: error,
+        message: "THERE WAS AN ERROR DELETING USER ID"
+      });
+    });
+});
+
+router.put("/:id", validateUserId, (req, res) => {
+  const editName = req.params.id;
+  const changes = req.body;
+
+  db.update(editName, changes)
+    .then(updatedName => {
+      res.status(200).json(updatedName);
+    })
+    .catch(error => {
+      res.status(500).json({
+        error: error,
+        message: "THERE WAS AN ERROR EDITING USER ID"
+      });
+    });
+});
 
 //custom middleware
 
 function validateUserId(req, res, next) {
   id = req.params.id;
+
+  console.log("validation user id is running");
 
   if (id) {
     req.user = id;
@@ -57,7 +128,9 @@ function validateUserId(req, res, next) {
 }
 
 function validateUser(req, res, next) {
-  const user = req.body;
+  user = req.body;
+
+  console.log("validation User is running");
 
   if (user) {
     next();
@@ -67,7 +140,17 @@ function validateUser(req, res, next) {
 }
 
 function validatePost(req, res, next) {
-  next();
+  post = req.body;
+
+  console.log("validate post is running");
+  if (post) {
+    next();
+  } else {
+    res.status(400).json({ message: "missing post data" });
+  }
+  if (post.text === "") {
+    res.status(400).json({ message: "missing required text field" });
+  }
 }
 
 module.exports = router;
