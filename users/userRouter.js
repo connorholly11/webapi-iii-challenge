@@ -98,13 +98,17 @@ router.delete("/:id", validateUserId, (req, res) => {
     });
 });
 
-router.put("/:id", validateUserId, (req, res) => {
+router.put("/:id", validateUserId, validateUser, (req, res) => {
   const editName = req.user;
-  const changes = req.body;
+  const changes = req.user;
 
   db.update(editName, changes)
     .then(updatedName => {
-      res.status(200).json(updatedName);
+      if (editName) {
+        res.status(200).json(updatedName);
+      } else {
+        res.status(404).json({ messsage: "404 error" });
+      }
     })
     .catch(error => {
       res.status(500).json({
@@ -136,7 +140,7 @@ function validateUser(req, res, next) {
 
   if (req.user) {
     next();
-  } else {
+  } else if (!req.user.name) {
     res.status(400).json({ message: "missing required name field" });
   }
 }
@@ -147,11 +151,10 @@ function validatePost(req, res, next) {
   console.log("validate post is running");
   if (req.post) {
     next();
-    //   } else {
-    //     res.status(400).json({ message: "missing post data" });
-    //   }
-    //   if (post.text === "") {
-    //     res.status(400).json({ message: "missing required text field" });
+  } else if (!req.post.text) {
+    res.status(400).json({ message: "missing required text field" });
+  } else {
+    res.status(400).json({ message: "missing post data" });
   }
 }
 
