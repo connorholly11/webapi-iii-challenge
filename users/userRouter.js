@@ -5,7 +5,7 @@ const postDB = require("../posts/postDb");
 const router = express.Router();
 
 router.post("/", validateUser, (req, res) => {
-  const newUser = req.body;
+  const newUser = req.user;
 
   db.insert(newUser)
     .then(user => {
@@ -19,8 +19,8 @@ router.post("/", validateUser, (req, res) => {
     });
 });
 
-router.post("/:id/posts", validateUserId, validatePost, (req, res) => {
-  const newPost = req.body;
+router.post("/:id/posts", validatePost, (req, res) => {
+  const newPost = req.post;
 
   postDB
     .insert(newPost)
@@ -53,7 +53,7 @@ router.get("/", (req, res) => {
 });
 
 router.get("/:id", validateUserId, (req, res) => {
-  const id = req.params.id;
+  const id = req.user;
 
   db.getById(id)
     .then(user => {
@@ -68,7 +68,7 @@ router.get("/:id", validateUserId, (req, res) => {
 });
 
 router.get("/:id/posts", validateUserId, (req, res) => {
-  const id = req.params.id;
+  const id = req.user;
 
   db.getUserPosts(id)
     .then(post => {
@@ -83,7 +83,7 @@ router.get("/:id/posts", validateUserId, (req, res) => {
 });
 
 router.delete("/:id", validateUserId, (req, res) => {
-  const id = req.params.id;
+  const id = req.user;
 
   db.remove(id)
     .then(deleted => {
@@ -99,7 +99,7 @@ router.delete("/:id", validateUserId, (req, res) => {
 });
 
 router.put("/:id", validateUserId, (req, res) => {
-  const editName = req.params.id;
+  const editName = req.user;
   const changes = req.body;
 
   db.update(editName, changes)
@@ -130,11 +130,11 @@ function validateUserId(req, res, next) {
 }
 
 function validateUser(req, res, next) {
-  user = req.body;
+  req.user = req.body;
 
   console.log("validation User is running");
 
-  if (user) {
+  if (req.user) {
     next();
   } else {
     res.status(400).json({ message: "missing required name field" });
@@ -142,16 +142,16 @@ function validateUser(req, res, next) {
 }
 
 function validatePost(req, res, next) {
-  post = req.body;
+  req.post = req.body;
 
   console.log("validate post is running");
-  if (post) {
+  if (req.post) {
     next();
-  } else {
-    res.status(400).json({ message: "missing post data" });
-  }
-  if (post.text === "") {
-    res.status(400).json({ message: "missing required text field" });
+    //   } else {
+    //     res.status(400).json({ message: "missing post data" });
+    //   }
+    //   if (post.text === "") {
+    //     res.status(400).json({ message: "missing required text field" });
   }
 }
 
