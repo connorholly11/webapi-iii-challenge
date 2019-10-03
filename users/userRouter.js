@@ -117,21 +117,20 @@ router.put("/:id", validateUserId, validateUser, (req, res) => {
 //custom middleware
 
 function validateUserId(req, res, next) {
-  req.id = req.params.id;
+  id = req.params.id;
 
-  console.log("validation user id is running");
-
-  if (!req.id) {
-    res.status(400).json({ message: "invalid user id" });
-  } else {
-    next();
-  }
+  db.getById(id).then(id => {
+    if (id) {
+      req.id = id;
+      next();
+    } else {
+      res.status(400).json({ message: "invalid user id" });
+    }
+  });
 }
 
 function validateUser(req, res, next) {
   req.user = req.body;
-
-  console.log("validation User is running");
 
   if (req.user) {
     next();
@@ -143,7 +142,6 @@ function validateUser(req, res, next) {
 function validatePost(req, res, next) {
   req.post = req.body;
 
-  console.log("validate post is running");
   if (req.post) {
     next();
   } else if (!req.post.text) {
