@@ -25,10 +25,10 @@ router.post("/:id/posts", validatePost, (req, res) => {
   postDB
     .insert(newPost)
     .then(post => {
-      if (post) {
-        res.status(201).json(post);
-      } else {
+      if (!post) {
         res.status(404).json({ message: "404 id invalid" });
+      } else {
+        res.status(201).json(post);
       }
     })
     .catch(error => {
@@ -53,7 +53,7 @@ router.get("/", (req, res) => {
 });
 
 router.get("/:id", validateUserId, (req, res) => {
-  const id = req.user;
+  const id = req.id;
 
   db.getById(id)
     .then(user => {
@@ -68,7 +68,7 @@ router.get("/:id", validateUserId, (req, res) => {
 });
 
 router.get("/:id/posts", validateUserId, (req, res) => {
-  const id = req.user;
+  const id = req.id;
 
   db.getUserPosts(id)
     .then(post => {
@@ -83,7 +83,7 @@ router.get("/:id/posts", validateUserId, (req, res) => {
 });
 
 router.delete("/:id", validateUserId, (req, res) => {
-  const id = req.user;
+  const id = req.id;
 
   db.remove(id)
     .then(deleted => {
@@ -99,16 +99,12 @@ router.delete("/:id", validateUserId, (req, res) => {
 });
 
 router.put("/:id", validateUserId, validateUser, (req, res) => {
-  const editName = req.user;
+  const editName = req.id;
   const changes = req.user;
 
   db.update(editName, changes)
     .then(updatedName => {
-      if (editName) {
-        res.status(200).json(updatedName);
-      } else {
-        res.status(404).json({ messsage: "404 error" });
-      }
+      res.status(200).json(updatedName);
     })
     .catch(error => {
       res.status(500).json({
@@ -121,15 +117,14 @@ router.put("/:id", validateUserId, validateUser, (req, res) => {
 //custom middleware
 
 function validateUserId(req, res, next) {
-  id = req.params.id;
+  req.id = req.params.id;
 
   console.log("validation user id is running");
 
-  if (id) {
-    req.user = id;
-    next();
-  } else {
+  if (!req.id) {
     res.status(400).json({ message: "invalid user id" });
+  } else {
+    next();
   }
 }
 
